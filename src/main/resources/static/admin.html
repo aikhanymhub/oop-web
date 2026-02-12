@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f1f5f9; }
+        .admin-container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
+        form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 30px; padding: 20px; border: 1px dashed #cbd5e1; }
+        input, button { padding: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        .btn-del { color: #ef4444; border: 1px solid #ef4444; background: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="admin-container">
+    <h2>Admin Panel</h2>
+
+    <form id="addForm">
+        <input type="text" id="brand" placeholder="Brand" required>
+        <input type="text" id="model" placeholder="Model" required>
+        <input type="number" id="price" placeholder="Price" required>
+        <button type="submit" style="grid-column: span 3; background: #1e293b; color: white;">Add New Vehicle</button>
+    </form>
+
+    <table id="adminTable">
+        <thead><tr><th>ID</th><th>Vehicle</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    const tableBody = document.querySelector('#adminTable tbody');
+
+    async function load() {
+        const res = await fetch('/vehicles');
+        const data = await res.json();
+        tableBody.innerHTML = data.map(v => `
+            <tr>
+                <td>${v.id}</td>
+                <td>${v.brand} ${v.model} ($${v.price})</td>
+                <td><button class="btn-del" onclick="remove(${v.id})">Delete</button></td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('addForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const car = {
+            brand: document.getElementById('brand').value,
+            model: document.getElementById('model').value,
+            price: document.getElementById('price').value,
+            type: 'Car', rented: false
+        };
+        await fetch('/vehicles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(car)
+        });
+        e.target.reset();
+        load();
+    };
+
+    async function remove(id) {
+        if(confirm("Delete this vehicle?")) {
+            await fetch(`/vehicles/${id}`, { method: 'DELETE' });
+            load();
+        }
+    }
+    load();
+</script>
+</body>
+</html>

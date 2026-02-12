@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent A Car</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: center; }
+        .price { font-size: 1.5rem; font-weight: 600; color: var(--primary); margin: 10px 0; }
+        .btn { width: 100%; padding: 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-rent { background: var(--primary); color: white; }
+        .btn-return { background: #64748b; color: white; }
+        .status { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    </style>
+</head>
+<body>
+<h1 style="text-align: center;">Find Your Ride</h1>
+<div class="card-grid" id="vehicleGrid"></div>
+
+<script>
+    async function load() {
+        const res = await fetch('/vehicles');
+        const data = await res.json();
+        document.getElementById('vehicleGrid').innerHTML = data.map(v => `
+            <div class="card">
+                <div class="status" style="color: ${v.rented ? '#ef4444' : '#22c55e'}">${v.rented ? '● Rented' : '● Available'}</div>
+                <h3>${v.brand} ${v.model}</h3>
+                <div class="price">$${v.price} <span style="font-size: 0.9rem; color: #64748b;">/day</span></div>
+                <button class="btn ${v.rented ? 'btn-return' : 'btn-rent'}" onclick="updateStatus(${v.id}, '${v.rented ? 'return' : 'rent'}')">
+                    ${v.rented ? 'Return Vehicle' : 'Rent Now'}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    async function updateStatus(id, action) {
+        await fetch(`/vehicles/${id}/${action}`, { method: 'PUT' });
+        load();
+    }
+    load();
+</script>
+</body>
+</html>
